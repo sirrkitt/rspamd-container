@@ -21,6 +21,6 @@ COPY	entrypoint.sh /entrypoint.sh
 
 VOLUME	[ "/var/lib/rspamd", "/etc/rspamd/local.d", "/etc/rspamd/override.d", "/socket/rspamd" ]
 
-CMD	[ "/entrypoint.sh" ]
+ENTRYPOINT	[ "/entrypoint.sh" ]
 
 EXPOSE	11333 11334

@@ -1,28 +1,26 @@
 FROM debian:buster
 
-ENV	V=2.6-156
+ENV	V=2.7-42
+ENV	PUID=101
+ENV	PGID=101
 
+RUN	apt-get update && apt-get install -y --no-install-recommends gnupg ca-certificates
 
-RUN	apt-get update && apt-get install -y --no-install-recommends gnupg dirmngr && rm -rf /var/lib/apt/lists/*
+ADD	https://rspamd.com/apt/gpg.key /tmp/rspamd.key
 
-RUN	set -x \
-# gpg: key FFA232EDBF21E25E: public key "Rspamd Nightly Builds (Rspamd Nightly Builds) <vsevolod@highsecure.ru>" imported
-	&& key='3FA347D5E599BE4595CA2576FFA232EDBF21E25E' \
-	&& export GNUPGHOME="$(mktemp -d)" \
-	&& gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key" \
-	&& gpg --export "$key" > /etc/apt/trusted.gpg.d/rspamd.gpg \
-	&& rm -rf "$GNUPGHOME" \
-	&& apt-key list > /dev/null
+RUN	apt-key add /tmp/rspamd.key
 
-RUN	echo "deb http://rspamd.com/apt-stable/ buster main" > /etc/apt/sources.list.d/rspamd.list
+RUN	echo "deb https://rspamd.com/apt-stable/ buster main" > /etc/apt/sources.list.d/rspamd.list
 
 RUN	apt-get update \
 	&& apt-get install -y rspamd \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& mkdir -p /etc/rspamd/local.d /etc/rspamd/override.d
 
-VOLUME	[ "/var/lib/rspamd", "/etc/rspamd/local.d", "/etc/rspamd/override.d" ]
+COPY	entrypoint.sh /entrypoint.sh
 
-CMD	[ "/usr/bin/rspamd", "-f", "-u", "_rspamd", "-g", "_rspamd" ]
+VOLUME	[ "/var/lib/rspamd", "/etc/rspamd/local.d", "/etc/rspamd/override.d", "/socket/rspamd" ]
+
+CMD	[ "/entrypoint.sh" ]
 
 EXPOSE	11333 11334
